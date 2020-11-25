@@ -14,11 +14,11 @@ shutil.move(os.getcwd()+"/car_damage_detector/obj.names",os.getcwd()+"/darknet/d
 shutil.move(os.getcwd()+"/car_damage_detector/yolov4-obj.cfg",os.getcwd()+"/darknet/cfg/yolov4-obj.cfg")
 shutil.move(os.getcwd()+"/car_damage_detector/test_images",os.getcwd()+"/test_images")
 
-#os.system('rm -r "car_damage_detector"')
+# os.system('rm -r "car_damage_detector"')
 
 os.chdir('./darknet')
 gdd.download_file_from_google_drive(file_id='1ebQ1ffbaX4LMCFgVnjpfFnsbIDm8Q_IU',
                                     dest_path='./cardamage_final.weights',
                                     showsize=True)
 
-os.system('make')
+# os.system('make')
