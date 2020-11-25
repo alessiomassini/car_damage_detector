@@ -11,7 +11,7 @@ from PIL import Image
 
 weights = ['cardamage_final.weights']
 
-img_dir = os.path.join(os.getcwd(), 'test_images')
+img_dir = '../test_images'
 
 ################ ------  DEFINE THE FUNCTIONS -----  ###############
 
@@ -236,18 +236,18 @@ for ws in weights:
     for filename in os.listdir(img_dir):
 
         os.system(f'./darknet detector test data/obj.data cfg/yolov4-obj.cfg\
-                models/{ws} {img_dir}/{filename} -thresh 0.2 -out results.json\
+                {ws} {img_dir}/{filename} -thresh 0.2 -out results.json\
                 -ext_output results.txt')
 
         coords = get_coords('results.json', filename)
         os.remove('results.json')
         new_coords, scores, labels = non_max_suppression(coords)
-        save_image_pred(img_dir + '/' + filename, new_coords, scores, labels) #--> save with name 'predicted.jpg'
+        save_image_pred(img_dir + '/' + filename, new_coords, scores, labels) 
 
         c+=1
         print(f'{c} images over {tot} predicted!')
 
-        shutil.move('predicted.jpg',f'./predictions/{filename.split(".")[0]}_{ws}.jpg')
+        shutil.move('predicted.jpg',f'./predictions/{filename.split(".")[0]}_predictions.jpg')
         print(f'{ws} finished!')
 
 shutil.move(src='predictions', dst='../predictions')
