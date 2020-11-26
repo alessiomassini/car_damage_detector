@@ -16,4 +16,6 @@ gdd.download_file_from_google_drive(file_id='1ebQ1ffbaX4LMCFgVnjpfFnsbIDm8Q_IU',
                                     dest_path='./cardamage_final.weights',
                                     showsize=True)
 
+os.system("sed -i -- 's/AVX=0/AVX=1/g' Makefile")
+os.system("sed -i -- 's/OPENMP=0/OPENMP=1/g' Makefile")
 os.system('make')
