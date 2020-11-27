@@ -7,7 +7,9 @@ We trained a `yolov4` model using https://github.com/AlexeyAB/darknet.git and bu
 
 The mAP of the detector is 80.45% in our valdation set.
 
-The program has been tested on MacOS and Linux. For Windows users we recommend to use the Docker image that you can find at this link:
+The program has been tested on MacOS and Linux. For Windows users we recommend to use the Docker image that you can find at this link after having registered or creating an account on docker hub:
+
+https://hub.docker.com/repository/docker/simone97/car_damage_detector
 
 ## Usage
 To predict the images already included in our repo with the folder name `test_images`
