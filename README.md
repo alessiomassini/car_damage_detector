@@ -1,5 +1,5 @@
 # Car damage detector
-We trained a `yolov4` model using `https://github.com/AlexeyAB/darknet.git` and built an effective tool to predict which parts of a car are damaged or whole. The parts that the detector recognizes are:
+We trained a `yolov4` model using https://github.com/AlexeyAB/darknet.git and built an effective tool to predict which parts of a car are damaged or whole. The parts that the detector recognizes are:
 - front, rear and side body
 - front, rear and side window
 - wheels
