@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 from PIL import Image
 
+# Arguments that can be specified on the command line
 parser = argparse.ArgumentParser()
 parser.add_argument('-imdir', type=str, default='test_images',
                     help='Directory where the images to predict are located')
@@ -14,9 +15,11 @@ parser.add_argument('-nms_tolerance', type=float, default=0.45,
                     help='Maximum IoU tolerated in non maximum suppression')
 args = parser.parse_args()
 
+# Setting image directory and weights 
 weights = 'cardamage_final.weights'
 img_dir = f'../{args.imdir}'
 
+# If a .DS_Store file is present in the image_dir, delete it 
 try: os.system(f'rm {img_dir}/.DS_Store')
 except: pass
 
@@ -24,10 +27,18 @@ except: pass
 
 
 def get_coords(json_file, filename):
-
+    '''
+    Function that gets as input the json file of the predictions 
+    that darknet yolov4 predicted for "filename" images, the second
+    input of the function.
+    It converts x_center, y_center, width and height in xmin,ymin,
+    xmax,ymax (pixel values). The output includes also the class name of the prediction
+    and the confidence level
+    '''
     image = Image.open(img_dir + '/' + filename)
     width, height = image.size
 
+    # Multiply the x coords by width and the y coords by height
     def rescale_x(x):
         if x < 0:
             x = 0
@@ -42,10 +53,12 @@ def get_coords(json_file, filename):
             x = 1
         return int(x*height)
 
+    # Get the predictions
     with open(json_file, 'r') as f:
         data = json.load(f)[0]['objects']
 
     detections = []
+    # Iterate over the predictions
     for i in data:
         xmin = (i['relative_coordinates']['center_x'] -
                 i['relative_coordinates']['width'] / 2)
@@ -58,15 +71,26 @@ def get_coords(json_file, filename):
                            rescale_y(ymin),
                            rescale_x(xmax),
                            rescale_y(ymax), i['confidence']])
+    # detections will be a list of lists where each list
+    # is [class_name, xmin, xmax, ymin, ymax, confidence]
 
     return detections
 
 
 def non_max_suppression(detections_, tolerance=args.nms_tolerance):
-
+    '''
+    Function that takes as input a list of lists as the output of
+    get_coords and performs two kinds of greedy NMS:
+    - If IoU > threshold: delete the one with lower confidence
+    - If intersection/area of the smaller box > 80% is higher that a 
+      certain threshold and the labels are the same, keep the one with
+      highest confidence
+    It outputs a list of three lists: the remaining classes predicted
+    the remaining coordinates and the confidence of the rem. classes
+    '''
     # If no bounding boxes, return empty list
     if len(detections_) == 0:
-        return []
+        return [[],[],[]]
 
     bounding_boxes = []
     confidence_score = []
@@ -172,7 +196,7 @@ def non_max_suppression(detections_, tolerance=args.nms_tolerance):
 
     return picked_boxes, picked_score, output_labels
 
-
+# Colors in RGB for the plotting
 colors = {'damage_side_body': (0, 0, 255),
           'damage_front_body': (0, 255, 255),
           'damage_rear_body': (255, 0, 255),
@@ -202,9 +226,10 @@ def save_image_pred(image_name, picked_boxes, picked_score, output_labels):
     # Draw parameters
     font = cv2.FONT_HERSHEY_DUPLEX
     scale = .1
-    font_scale = min(width, height)/(110/scale)
-    alpha = 0.2
-    limit = 0.2
+    font_scale = min(width, height)/(110/scale) # adjust font scale according to im dimensions
+    alpha = 0.2 # transparency parameter
+    limit = 0.2 # if a bounding box is near to the upper boundary of the images (0.2*height),
+                # plot the name of the class inside the box (otherwise it would not be visible)
 
     # Draw bounding boxes and confidence score after non-maximum supression
     for (start_x, start_y, end_x, end_y), confidence, label in zip(picked_boxes, picked_score, output_labels):
@@ -213,16 +238,18 @@ def save_image_pred(image_name, picked_boxes, picked_score, output_labels):
         cv2.rectangle(img=image, pt1=(start_x, start_y), pt2=(end_x, end_y),
                       color=colors[label], thickness=0)
 
-        if abs(start_y) < limit*height:
+        if abs(start_y) < limit*height: 
             cv2.rectangle(img=image, pt1=(start_x, start_y + (2 * baseline + 7)), pt2=(start_x + w, start_y - 3),
                           color=colors[label], thickness=-1)
             cv2.putText(image, f'{label}: {round(confidence*100)}%',
                         (start_x, start_y + (2 * baseline + 7)), font, font_scale, (0, 0, 0), 1, lineType=cv2.LINE_AA)
+            # take a cut of the image in the area where the class name box will be plotted
             cv2.rectangle(img=overlay,
                           pt1=(start_x, start_y + (2 * baseline + 7)),
                           pt2=(start_x + w, start_y - 3),
                           color=(0, 0, 0), thickness=0)
-
+            # to add transparency, substitute in the class name box area a weighted version of 
+            # the cut of the image and the class name box
             image_new = cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0)
 
         else:
